@@ -2,9 +2,10 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
+use App\Project;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ProjectsTest extends TestCase
 {
@@ -56,7 +57,7 @@ class ProjectsTest extends TestCase
     {
         $this->withoutExceptionHandling();
 
-        $this->actingAs(factory('App\User')->create());
+        $this->signIn();
 
         $this->get('/projects/create')->assertStatus(200);
 
@@ -65,9 +66,14 @@ class ProjectsTest extends TestCase
             'description' => $this->faker->paragraph
         ];
 
-        $this->post('/projects',$projectAttributes)->assertRedirect('/projects');
+        $this->post('/projects', $projectAttributes);
+        // $response = $this->post('/projects', $projectAttributes);
 
-        $this->assertDatabaseHas('projects',$projectAttributes);
+        // $project = Project::where($projectAttributes)->first();
+
+        // $response->assertRedirect($project->path());
+
+        $this->assertDatabaseHas('projects', $projectAttributes);
 
         $this->get('/projects')->assertSee($projectAttributes['title']);
     }
@@ -100,7 +106,7 @@ class ProjectsTest extends TestCase
     /** @test */
     public function a_project_requires_a_title()
     {
-        $this->actingAs(factory('App\User')->create());
+        $this->signIn();
 
         $projectAttributes = factory('App\Project')->raw(['title' => '']);
 
@@ -110,7 +116,7 @@ class ProjectsTest extends TestCase
     /** @test */
     public function a_project_requires_a_description()
     {
-        $this->actingAs(factory('App\User')->create());
+        $this->signIn();
 
         $projectAttributes = factory('App\Project')->raw(['description' => '']);
         
