@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Project;
 use Illuminate\Http\Request;
+use App\Http\Requests\UpdateProjectRequest;
 
 class ProjectsController extends Controller
 {
@@ -28,23 +29,39 @@ class ProjectsController extends Controller
 
     public function store()
     {
-        $attributes = request()->validate([
-            'title'=>  'required', 
-            'description' => 'required',
-            'notes' => 'min:3'
-        ]);
+         $project = auth()->user()->projects()->create($this->validateRequest());
 
-        $project = auth()->user()->projects()->create($attributes);
+        if ($tasks = request('tasks')) {
+            $project->addTasks($tasks);
+        }
+
+        if (request()->wantsJson()) {
+            return ['message' => $project->path()];
+        }
 
         return redirect($project->path());
     }
 
-    public function update(Project $project)
+    public function edit(Project $project)
+    {
+        return view('projects.edit', compact('project'));
+    }
+
+    public function update()
     {
         $this->authorize('update', $project);
 
-        $project->update(['notes']);
+        $project->update($this->validateRequest());
 
         return redirect($project->path());
+    }
+
+    protected function validateRequest()
+    {
+        return request()->validate([
+            'title'=>  'sometimes|required', 
+            'description' => 'sometimes|required',
+            'notes' => 'nullable'
+        ]);
     }
 }
